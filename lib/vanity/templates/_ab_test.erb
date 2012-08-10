@@ -19,7 +19,7 @@
       <td class="value"><%= alt.participants %> participants</td>
       <td class="value">
         <%= alt.converted %> converted
-        <% alt.metric_counts.each do |metric, count| %>
+        <% alt.metric_counts.sort_by{|metric, count| metric}.each do |metric, count| %>
           <div class="metric_count"><%= metric %>: <%= count %></div>
         <% end %>
       </td>
