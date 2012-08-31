@@ -217,7 +217,7 @@ module Vanity
       # Returns hash with metric names as keys and metric counts as values
       def ab_metric_counts(experiment, alternative)
         record = VanityExperiment.retrieve(experiment)
-        metric_counts = record.vanity_metric_counts.where(:alternative => alternative)
+        metric_counts = record.vanity_metric_counts.find(:all, :conditions => {:alternative => alternative})
         Hash[metric_counts.map {|metric_count| [metric_count.metric, metric_count.count]}]
       end
 
