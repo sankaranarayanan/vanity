@@ -10,7 +10,13 @@ module Vanity
         @experiment = experiment
         @id = id
         @name = "option #{(@id + 65).chr}"
-        @value = value
+        if Hash === value
+          @value = value.keys.first
+          @weight = value.values.first
+        else
+          @value = value
+          @weight = 1
+        end
       end
 
       # Alternative id, only unique for this experiment.
@@ -24,6 +30,9 @@ module Vanity
 
       # Experiment this alternative belongs to.
       attr_reader :experiment
+
+      # Alternative weight.
+      attr_reader :weight
 
       # Number of participants who viewed this alternative.
       def participants
@@ -587,7 +596,17 @@ module Vanity
       # identity, and randomly distributed alternatives for each identity (in the
       # same experiment).
       def alternative_for(identity)
-        Digest::MD5.hexdigest("#{name}/#{identity}").to_i(17) % @alternatives.size
+        weights = alternatives.map(&:weight)
+
+        total = weights.inject(:+)
+        point = rand * total
+
+        alternatives.zip(weights).each do |n,w|
+          return alternatives.index(n) if w >= point
+          point -= w
+        end
+        @alternatives.size-1
+        #Digest::MD5.hexdigest("#{name}/#{identity}").to_i(17) % @alternatives.size
       end
 
       begin
