@@ -560,8 +560,13 @@ module Vanity
         return unless active? && enabled?
         identity = identity() rescue nil
         if identity
-          return if connection.ab_showing(@id, identity)
-          index = alternative_for(identity)
+          #return if connection.ab_showing(@id, identity)
+          #index = alternative_for(identity)
+          if !(index = connection.ab_showing(@id, identity))
+            # Don't track if we haven't seen any options
+            return #index = alternative_for(identity)
+          end
+          
           connection.ab_add_metric_count @id, index, metric_id, count
           connection.ab_add_conversion @id, index, identity, count
           check_completion!
