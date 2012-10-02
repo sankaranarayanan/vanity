@@ -230,7 +230,7 @@ module Vanity
       # Indicates which alternative to show to this participant. See #ab_show.
       def ab_showing(experiment, identity)
         participant = VanityParticipant.retrieve(experiment, identity, false)
-        participant && participant.shown
+        participant && (participant.shown || participant.seen)
       end
 
       # Cancels previously set association between identity and alternative. See
