@@ -42,7 +42,14 @@ module Vanity
       end
 
       def connect!
-        @redis = @options[:redis] || Redis.new(@options)
+        @redis = if @options[:redis]
+          @options[:redis]
+        elsif Redis.respond_to?(:connect)
+          Redis.connect(:thread_safe => true)
+        else
+          Redis.new(@options)
+        end
+
         @metrics = Redis::Namespace.new("vanity:metrics", :redis=>@redis)
         @experiments = Redis::Namespace.new("vanity:experiments", :redis=>@redis)
       end
@@ -60,7 +67,7 @@ module Vanity
       end
 
       # -- Metrics --
-      
+
       def get_metric_last_update_at(metric)
         last_update_at = @metrics["#{metric}:last_update_at"]
         last_update_at && Time.at(last_update_at.to_i)
@@ -84,7 +91,7 @@ module Vanity
 
 
       # -- Experiments --
-     
+
       def set_experiment_enabled(experiment, enabled)
         @experiments.set "#{experiment}:enabled", enabled
       end
@@ -92,7 +99,7 @@ module Vanity
       def is_experiment_enabled?(experiment)
         @experiments["#{experiment}:enabled"] == 'true'
       end
-     
+
       def set_experiment_created_at(experiment, time)
         @experiments.setnx "#{experiment}:created_at", time.to_i
       end
@@ -120,7 +127,7 @@ module Vanity
           :converted    => @experiments.scard("#{experiment}:alts:#{alternative}:converted").to_i,
           :conversions  => @experiments["#{experiment}:alts:#{alternative}:conversions"].to_i }
       end
-      
+
       def ab_metric_counts(experiment, alternative)
         metric_count_keys = @experiments.keys("#{experiment}:alts:#{alternative}:metrics:*")
         Hash[metric_count_keys.map {|key| [key.split(':')[4], @experiments[key].to_i]}]

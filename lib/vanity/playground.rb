@@ -63,7 +63,7 @@ module Vanity
       self.add_participant_path = DEFAULT_ADD_PARTICIPANT_PATH
       @collecting = !!@options[:collecting]
     end
-   
+
     # Deprecated. Use redis.server instead.
     attr_accessor :host, :port, :db, :password, :namespace
 
@@ -219,7 +219,7 @@ module Vanity
 
 
     # -- Connection management --
- 
+
     # This is the preferred way to programmatically create a new connection (or
     # switch to a new connection). If no connection was established, the
     # playground will create a new one by calling this method with no arguments.
@@ -242,7 +242,7 @@ module Vanity
     #   Vanity.playground.establish_connection :adapter=>:redis,
     #                                          :host=>"redis.local"
     #
-    # @since 1.4.0 
+    # @since 1.4.0
     def establish_connection(spec = nil)
       @spec = spec
       disconnect! if @adapter
@@ -257,7 +257,12 @@ module Vanity
           env = ENV["RACK_ENV"] || ENV["RAILS_ENV"] || "development"
           redis = load_config_file("redis.yml")[env]
           fail "No configuration for #{env}" unless redis
-          establish_connection "redis://" + redis
+          case redis
+          when Hash
+            establish_connection redis.merge(:adapter => 'redis')
+          else
+            establish_connection "redis://" + redis
+          end
         else
           establish_connection :adapter=>"redis"
         end
