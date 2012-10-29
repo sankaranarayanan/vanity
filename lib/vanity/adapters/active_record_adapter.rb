@@ -33,12 +33,15 @@ module Vanity
       # Metric value
       class VanityMetricValue < VanityRecord
         self.table_name = :vanity_metric_values
+        attr_accessible  :date, :index, :value
+
         belongs_to :vanity_metric
       end
 
       # Experiment model
       class VanityExperiment < VanityRecord
         self.table_name = :vanity_experiments
+        attr_accessible :experiment_id
         has_many :vanity_conversions, :dependent => :destroy
         has_many :vanity_metric_counts, :dependent => :destroy
 
@@ -51,7 +54,7 @@ module Vanity
           record = vanity_conversions.find_or_create_by_alternative(alternative)
           record.increment!(:conversions, count)
         end
-        
+
         def increment_metric_count(alternative, metric, count = 1)
           record = vanity_metric_counts.find_or_create_by_alternative_and_metric(alternative, metric.to_s)
           record.increment!(:count, count)
@@ -73,6 +76,7 @@ module Vanity
       # Participant model
       class VanityParticipant < VanityRecord
         self.table_name = :vanity_participants
+        attr_accessible :experiment_id, :identity, :seen, :shown, :converted
 
         # Finds the participant by experiment and identity. If
         # create is true then it will create the participant
@@ -114,7 +118,7 @@ module Vanity
           klass.delete_all
         end
       end
-      
+
       # -- Metrics --
 
       def get_metric_last_update_at(metric)
@@ -161,7 +165,7 @@ module Vanity
       end
 
       # -- Experiments --
-      
+
       def set_experiment_enabled(experiment, enabled)
         VanityExperiment.retrieve(experiment).update_attribute(:enabled, enabled)
       end
@@ -212,7 +216,7 @@ module Vanity
                 :conversions => conversions
         }
       end
-      
+
       # Returns metric counts for given A/B experiment and alternative (by index).
       # Returns hash with metric names as keys and metric counts as values
       def ab_metric_counts(experiment, alternative)
@@ -253,7 +257,7 @@ module Vanity
         VanityParticipant.retrieve(experiment, identity, implicit, :converted => alternative)
         VanityExperiment.retrieve(experiment).increment_conversion(alternative, count)
       end
-      
+
       # Records a tracked metric in this experiment for the given alternative.
       def ab_add_metric_count(experiment, alternative, metric, count = 1)
         VanityExperiment.retrieve(experiment).increment_metric_count(alternative, metric, count)
